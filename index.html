@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Advanced English Quiz - Sudanese Curriculum Style</title>
+    <title>Advanced English Quiz - Review Mode</title>
     <style>
       :root {
         --primary-color: #2c3e50;
         --accent-color: #27ae60;
-        --warning-color: #e74c3c;
+        --error-color: #e74c3c;
+        --warning-color: #f39c12;
       }
 
       body {
@@ -25,11 +26,10 @@
       .quiz-container {
         background: white;
         width: 100%;
-        max-width: 750px;
+        max-width: 800px;
         border-radius: 20px;
         box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         overflow: hidden;
-        position: relative;
       }
 
       .header {
@@ -46,28 +46,23 @@
         padding: 8px 15px;
         border-radius: 10px;
         font-weight: bold;
-        font-size: 1.2rem;
         border: 1px solid white;
       }
 
       .part-label {
-        background: #f39c12;
-        color: white;
-        padding: 5px 15px;
-        font-size: 0.9rem;
+        background: var(--warning-color);
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 0.85rem;
         font-weight: bold;
-        text-transform: uppercase;
       }
 
-      .quiz-body {
-        padding: 30px;
-      }
+      .quiz-body { padding: 30px; }
 
       .question-box h2 {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         color: #34495e;
-        line-height: 1.6;
-        margin-bottom: 25px;
+        line-height: 1.5;
         border-left: 5px solid var(--accent-color);
         padding-left: 15px;
       }
@@ -76,58 +71,67 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: 12px;
+        margin-top: 25px;
       }
 
       .option-btn {
         background: #f8f9fa;
         border: 2px solid #ddd;
-        padding: 18px;
+        padding: 15px;
         border-radius: 12px;
         cursor: pointer;
-        font-size: 1.05rem;
+        font-size: 1rem;
         text-align: left;
-        transition: all 0.2s ease;
+        transition: 0.2s;
       }
 
       .option-btn:hover {
         border-color: var(--accent-color);
         background: #eafaf1;
-        transform: translateX(5px);
       }
 
-      .progress-bar {
-        height: 6px;
-        background: #eee;
-        width: 100%;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: var(--accent-color);
-        width: 0%;
-        transition: width 0.3s ease;
-      }
+      .progress-bar { height: 6px; background: #eee; width: 100%; }
+      .progress-fill { height: 100%; background: var(--accent-color); width: 0%; transition: 0.3s; }
 
       .hidden { display: none; }
 
-      .result-screen {
-        text-align: center;
-        padding: 50px 30px;
+      /* مراجعة الإجابات */
+      .result-screen { padding: 30px; text-align: center; }
+      
+      .review-container {
+        text-align: left;
+        margin-top: 30px;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 15px;
+        background: #fafafa;
       }
 
-      .score-circle {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        border: 10px solid var(--accent-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin: 0 auto 30px;
-        color: var(--primary-color);
+      .review-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 10px;
       }
+
+      .review-q { font-weight: bold; color: var(--primary-color); margin-bottom: 5px; }
+      
+      .status-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      .tag-correct { background: #d4edda; color: #155724; }
+      .tag-wrong { background: #f8d7da; color: #721c24; }
+
+      .ans-text { font-size: 0.95rem; margin: 3px 0; }
+      .correct-highlight { color: var(--accent-color); font-weight: bold; }
+      .wrong-highlight { color: var(--error-color); text-decoration: line-through; }
 
       .restart-btn {
         background: var(--primary-color);
@@ -135,8 +139,8 @@
         border: none;
         padding: 15px 40px;
         border-radius: 10px;
-        font-size: 1.1rem;
         cursor: pointer;
+        margin-top: 20px;
       }
     </style>
   </head>
@@ -146,32 +150,35 @@
       <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
       
       <div class="header">
-        <div>
-          <div id="part-name" class="part-label">Part 1: Tenses</div>
-        </div>
+        <span id="part-name" class="part-label">Part 1: Tenses</span>
         <div id="timer" class="timer-box">20:00</div>
       </div>
 
       <div class="quiz-body" id="quiz-screen">
         <div class="question-box">
-          <p id="q-counter" style="color: #7f8c8d; font-weight: bold;">Question 1 / 23</p>
-          <h2 id="question-text">Loading question...</h2>
+          <p id="q-counter" style="color: #7f8c8d; font-size: 0.9rem;">Question 1 / 23</p>
+          <h2 id="question-text">Loading...</h2>
         </div>
         <div class="options-grid" id="options-container"></div>
       </div>
 
+      <!-- شاشة النتيجة والمراجعة -->
       <div id="result-screen" class="hidden result-screen">
-        <h2>Exam Completed</h2>
-        <div class="score-circle" id="final-score">0/0</div>
-        <p id="feedback-msg" style="margin-bottom: 30px; font-size: 1.2rem; color: #7f8c8d;"></p>
+        <h2 style="margin-top:0">Exam Result</h2>
+        <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent-color);" id="final-score">0/0</div>
+        <p id="feedback-msg"></p>
+
+        <h3 style="text-align:left; margin-top:30px; border-bottom: 2px solid #eee; padding-bottom:10px;">Review Your Answers:</h3>
+        <div class="review-container" id="review-list">
+          <!-- الإجابات ستظهر هنا برمجياً -->
+        </div>
+
         <button class="restart-btn" onclick="location.reload()">Restart Exam</button>
       </div>
     </div>
 
     <script>
-      // داتا الأسئلة مستخرجة بالكامل من الصورة التي أرسلتها
       const questions = [
-        // (1) Tenses Section
         { q: "Look! The Baggara women ________ on their oxen. (ride)", a: "are riding", options: ["ride", "are riding", "rides"], p: "Part 1: Tenses" },
         { q: "Girls usually ________ their mothers. (help)", a: "help", options: ["help", "helping", "helps"], p: "Part 1: Tenses" },
         { q: "Farmers ________ a lot of wheat last year. (grow)", a: "grew", options: ["grow", "grown", "grew"], p: "Part 1: Tenses" },
@@ -181,22 +188,16 @@
         { q: "If we ________ a lot of trees, the amount of oxygen will increase. (plant)", a: "plant", options: ["planted", "plant", "plants"], p: "Part 1: Tenses" },
         { q: "You can lead a horse to water, but you can't make it ________. (drink)", a: "drink", options: ["to drink", "drink", "drinking"], p: "Part 1: Tenses" },
         { q: "During the flood last year many houses ________. (destroy)", a: "were destroyed", options: ["destroyed", "were destroyed", "are destroyed"], p: "Part 1: Tenses" },
-
-        // (I) Prefixes Section
         { q: "This winter is very ________. It is quite warm. (Prefix + usual)", a: "unusual", options: ["inusual", "unusual", "disusual"], p: "Part 2: Prefixes" },
         { q: "Some people look ________. They do little work. (Prefix + active)", a: "inactive", options: ["inactive", "unactive", "disactive"], p: "Part 2: Prefixes" },
         { q: "Children shouldn't ________ their parents. (Prefix + please)", a: "displease", options: ["unplease", "displease", "implease"], p: "Part 2: Prefixes" },
         { q: "Wise people always ________ their difficulties. (Prefix + come)", a: "overcome", options: ["income", "uncome", "overcome"], p: "Part 2: Prefixes" },
         { q: "In the Sudan we don't need to ________ sugar. (Prefix + port)", a: "import", options: ["import", "unport", "disport"], p: "Part 2: Prefixes" },
-
-        // (II) Suffixes Section
         { q: "Sudanese students are always ________. (Suffix + respect)", a: "respectful", options: ["respectful", "respectous", "respectian"], p: "Part 3: Suffixes" },
         { q: "Learning foreign languages is of great ________. (Suffix + important)", a: "importance", options: ["importantal", "importantous", "importance"], p: "Part 3: Suffixes" },
         { q: "Mohamid El Amin is a very popular ________ and singer. (Suffix + music)", a: "musician", options: ["musician", "musical", "musicous"], p: "Part 3: Suffixes" },
         { q: "Driving too fast is always very ________. (Suffix + danger)", a: "dangerous", options: ["dangeral", "dangerous", "dangerful"], p: "Part 3: Suffixes" },
         { q: "In Jabal Marra there are springs with sweet ________ water. (Suffix + nature)", a: "natural", options: ["natureful", "natural", "naturece"], p: "Part 3: Suffixes" },
-
-        // (III) Text Completion Section
         { q: "Fighting against germs takes a lot of ________. (Complete the text)", a: "energy", options: ["too", "feel", "energy"], p: "Part 4: Text Completion" },
         { q: "This is why we often ________ tired when we are sick. (Complete the text)", a: "feel", options: ["feel", "energy", "when"], p: "Part 4: Text Completion" },
         { q: "We should ask a doctor ________ help and advice.", a: "for", options: ["for", "when", "too"], p: "Part 4: Text Completion" },
@@ -205,20 +206,19 @@
 
       let currentIdx = 0;
       let score = 0;
-      let timeLimit = 1200; // 20 minutes
+      let userAnswers = []; // لتخزين إجابات الطالب
+      let timeLimit = 1200; 
       let timer;
 
       function startExam() {
         renderQuestion();
-        timer = setInterval(updateTimer, 1000);
-      }
-
-      function updateTimer() {
-        timeLimit--;
-        let m = Math.floor(timeLimit / 60);
-        let s = timeLimit % 60;
-        document.getElementById("timer").innerText = `${m}:${s < 10 ? '0' + s : s}`;
-        if(timeLimit <= 0) finishExam();
+        timer = setInterval(() => {
+          timeLimit--;
+          let m = Math.floor(timeLimit / 60);
+          let s = timeLimit % 60;
+          document.getElementById("timer").innerText = `${m}:${s < 10 ? '0' + s : s}`;
+          if(timeLimit <= 0) finishExam();
+        }, 1000);
       }
 
       function renderQuestion() {
@@ -234,19 +234,17 @@
           const btn = document.createElement("button");
           btn.className = "option-btn";
           btn.innerText = opt;
-          btn.onclick = () => selectAnswer(opt);
+          btn.onclick = () => {
+            userAnswers.push(opt);
+            if(opt === item.a) score++;
+            currentIdx++;
+            if(currentIdx < questions.length) renderQuestion();
+            else finishExam();
+          };
           container.appendChild(btn);
         });
 
-        const progress = ((currentIdx + 1) / questions.length) * 100;
-        document.getElementById("progress-fill").style.width = progress + "%";
-      }
-
-      function selectAnswer(choice) {
-        if(choice === questions[currentIdx].a) score++;
-        currentIdx++;
-        if(currentIdx < questions.length) renderQuestion();
-        else finishExam();
+        document.getElementById("progress-fill").style.width = ((currentIdx) / questions.length) * 100 + "%";
       }
 
       function finishExam() {
@@ -255,12 +253,24 @@
         document.getElementById("result-screen").classList.remove("hidden");
         document.getElementById("final-score").innerText = `${score} / ${questions.length}`;
         
-        let msg = "";
-        const percent = (score / questions.length) * 100;
-        if(percent >= 80) msg = "Excellent! You are a master of grammar.";
-        else if(percent >= 50) msg = "Well done! You passed the test.";
-        else msg = "You need more practice. Don't give up!";
-        document.getElementById("feedback-msg").innerText = msg;
+        const listContainer = document.getElementById("review-list");
+        listContainer.innerHTML = "";
+
+        questions.forEach((q, index) => {
+          const isCorrect = userAnswers[index] === q.a;
+          const itemDiv = document.createElement("div");
+          itemDiv.className = "review-item";
+          
+          itemDiv.innerHTML = `
+            <div class="review-q">${index + 1}. ${q.q}</div>
+            <div class="ans-text">
+              <span class="status-tag ${isCorrect ? 'tag-correct' : 'tag-wrong'}">${isCorrect ? 'Correct' : 'Mistake'}</span>
+              Your answer: <span class="${isCorrect ? 'correct-highlight' : 'wrong-highlight'}">${userAnswers[index] || 'No Answer'}</span>
+            </div>
+            ${!isCorrect ? `<div class="ans-text">Correct answer: <span class="correct-highlight">${q.a}</span></div>` : ''}
+          `;
+          listContainer.appendChild(itemDiv);
+        });
       }
 
       startExam();
